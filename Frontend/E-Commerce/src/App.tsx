@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router";
 import { ToastContainer } from "react-toastify";
+import { allRoutes } from "./router/routes";
 
 export default function App() {
 
@@ -10,9 +11,9 @@ export default function App() {
     const token = localStorage.getItem('adminToken');
 
     if (token)
-      navigate('/dashboard');
+      navigate(allRoutes.dashboard);
     else
-      navigate('/login');
+      navigate(allRoutes.login);
 
   }, []);
 

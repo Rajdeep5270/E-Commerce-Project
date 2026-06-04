@@ -1,29 +1,55 @@
-import { useState } from "react";
-import { adminLogin } from "../../services/authService";
+import { useEffect, useState } from "react";
+import { adminLogin } from "../../services/auth/authService";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router";
+import { allRoutes } from "../../router/routes";
 
 export default function LoginPage() {
     const [loginData, setLoginData] = useState({ email: "", password: "" });
     const [loader, setLoader] = useState<boolean>(false);
+    const [error, setError] = useState<any>({});
     const navigate = useNavigate();
+
+
+    function validiation() {
+        const error: any = {};
+
+        if (!loginData.email) error.email = "Email is required";
+
+        if (!loginData.password) error.password = "Password is required";
+
+        setError(error);
+
+        return Object.keys(error).length === 0;
+    }
 
     const onHandleSubmit = async (e: any) => {
         e.preventDefault();
+
+        if (!validiation()) return;
+
         setLoader(true);
+
         const data = await adminLogin(loginData);
 
-        if (data?.status === 200) {
+        if (data.status === 200) {
             toast.success(data.message || "Login successful");
             localStorage.setItem('adminToken', data.result);
-            navigate('/dashboard');
+
+            setLoginData({
+                email: "",
+                password: ""
+            })
+
+            navigate(allRoutes.dashboard);
         } else {
             toast.error(data?.message || "Authentication failed");
-            navigate('/login');
+            navigate(allRoutes.login);
         }
 
         setLoader(false);
     };
+
 
     return (
         <div className="w-full max-w-md space-y-8">
@@ -44,41 +70,81 @@ export default function LoginPage() {
             <form onSubmit={onHandleSubmit} className="space-y-5">
                 {/* Email Field */}
                 <div className="space-y-1.5">
-                    <label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-slate-600 block">
-                        Admin Email
-                    </label>
-                    <input
-                        type="email"
-                        name="email"
-                        id="email"
-                        value={loginData.email}
-                        placeholder="root_admin@auramarket.com"
-                        onChange={(event) => setLoginData((prev) => ({ ...prev, email: event.target.value }))}
-                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all placeholder:text-slate-400 bg-white font-mono"
-                        required
-                    />
+                    <div className="flex justify-between items-center">
+                        <label
+                            htmlFor="email"
+                            className={`text-xs font-semibold uppercase tracking-wider block transition-colors duration-150 ${error.email ? "text-red-600" : "text-slate-600"
+                                }`}
+                        >
+                            Admin Email
+                        </label>
+                    </div>
+
+                    <div className="relative">
+                        <input
+                            type="email"
+                            name="email"
+                            id="email"
+                            value={loginData.email}
+                            placeholder="root_admin@auramarket.com"
+                            onChange={(event) => setLoginData((prev) => ({ ...prev, email: event.target.value }))}
+                            className={`w-full px-3.5 py-2.5 border rounded-lg text-slate-900 text-xs focus:outline-none transition-all placeholder:text-slate-400 bg-white font-mono ${error.email
+                                ? "border-red-500 focus:ring-2 focus:ring-red-600/20 focus:border-red-600 shadow-sm"
+                                : "border-slate-200 focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+                                }`}
+                        />
+                    </div>
+
+                    {/* Premium Error Wrapper Block */}
+                    {error.email && (
+                        <div className="flex items-center gap-1.5 text-[11px] font-medium text-red-600 animate-slide-in mt-1 select-none">
+                            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                            </svg>
+                            <span>{error.email}</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Password Field */}
                 <div className="space-y-1.5">
                     <div className="flex justify-between items-center">
-                        <label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-slate-600">
+                        <label
+                            htmlFor="password"
+                            className={`text-xs font-semibold uppercase tracking-wider transition-colors duration-150 ${error.password ? "text-red-600" : "text-slate-600"
+                                }`}
+                        >
                             Password
                         </label>
-                        <Link to="/forgot-password" className="text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
+                        <Link to={allRoutes.forgot_password} className="text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
                             Forgot Password ?
                         </Link>
                     </div>
-                    <input
-                        type="password"
-                        name="password"
-                        id="password"
-                        value={loginData.password}
-                        placeholder="••••••••••••"
-                        onChange={(event) => setLoginData((prev) => ({ ...prev, password: event.target.value }))}
-                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all placeholder:text-slate-400 bg-white font-mono text-xs"
-                        required
-                    />
+
+                    <div className="relative">
+                        <input
+                            type="password"
+                            name="password"
+                            id="password"
+                            value={loginData.password}
+                            placeholder="••••••••••••"
+                            onChange={(event) => setLoginData((prev) => ({ ...prev, password: event.target.value }))}
+                            className={`w-full px-3.5 py-2.5 border rounded-lg text-slate-900 text-xs focus:outline-none transition-all placeholder:text-slate-400 bg-white font-mono ${error.password
+                                ? "border-red-500 focus:ring-2 focus:ring-red-600/20 focus:border-red-600 shadow-sm"
+                                : "border-slate-200 focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+                                }`}
+                        />
+                    </div>
+
+                    {/* Premium Error Wrapper Block */}
+                    {error.password && (
+                        <div className="flex items-center gap-1.5 text-[11px] font-medium text-red-600 animate-slide-in mt-1 select-none">
+                            <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                            </svg>
+                            <span>{error.password}</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Remember Session */}
